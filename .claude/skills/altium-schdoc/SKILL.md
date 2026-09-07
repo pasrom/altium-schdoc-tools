@@ -79,6 +79,12 @@ parse /path/to/Sheet.SchDoc -f net-list -o nets.json
 - **Fit status / DNP is not in the `.SchDoc`.** Not-fitted parts and assembly
   variants live in the project's `.PrjPcb` (`[ProjectVariant…] Variation …
   Kind=1`). Never claim a part is populated from the schematic alone.
+- **A large component drawn as multiple symbol instances under the same
+  designator can show a "floating" pin that is not actually floating** —
+  Altium treats same-designator/same-pin-number instances as one physical
+  pin, this tool does not. Before reporting a pin as unconnected, check
+  whether the same designator+pin appears, connected, elsewhere. Details:
+  [docs/altium-schdoc-format.md](../../../docs/altium-schdoc-format.md#multi-part-components-the-same-designator-drawn-twice).
 
 ## Interpreting results
 

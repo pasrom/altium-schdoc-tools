@@ -88,6 +88,29 @@ Coordinates can carry fractional sub-unit fields, e.g. `Location.X_Frac`
 sheets, wrong for off-grid placements. If nets come out broken where the
 drawing clearly connects, check for `_Frac` keys on the pins involved.
 
+## Multi-part components: the same designator, drawn twice
+
+Verified against a real production schematic (not a synthetic fixture): a
+large, high-pin-count component was drawn as **two separate `RECORD=1`
+component instances**, each with its own `RECORD=34` designator record
+carrying the *same* text (e.g. both say `U1`), and in this case the two
+instances even shared a pin number. This is a real, legitimate Altium
+pattern for large parts split across multiple graphical blocks on a sheet
+for readability, and Altium's own netlist compiler treats
+same-designator/same-pin-number instances as one physical pin regardless of
+geometry.
+
+`schnet.py`'s model does not know this: it treats the two `RECORD=1`
+instances as two independent components. If one instance's copy of the pin
+is wired on the sheet and the other's is not, the wired one lands correctly
+in its net and the unwired one comes out as its own disconnected, unnamed
+single-pin "net" — even though electrically it is the same pin. Symptom:
+a real net shows the expected members *and* one or more suspicious
+single-pin `(unnamed)` nets naming a pin that also appears, correctly, in a
+larger named net. If you see that pattern, check for a second `RECORD=34`
+with the same designator text before concluding the pin is actually
+floating.
+
 ## What is NOT in the .SchDoc
 
 - **Fit status (not-fitted / DNP) and assembly-variant alternates** live in
