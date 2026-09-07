@@ -7,7 +7,7 @@ components (with designators), power ports, net labels and cross-sheet ports.
 
 Usage: python3 schextract.py <path/to/sheet.SchDoc>
 """
-import olefile, sys, struct, re
+import olefile, sys, struct
 
 def read_records(path):
     ole = olefile.OleFileIO(path)
@@ -74,9 +74,10 @@ def main(path):
                     oidx = int(oi)
                 except:
                     continue
-                # owner ordinal = OwnerIndex (records list, header is index 0)
-                # try oidx and oidx (both conventions)
-                for cand in (oidx, oidx+1, oidx-1):
+                # owner ordinal: OwnerIndex+1 is the documented convention
+                # (records list, header is index 0); OwnerIndex/OwnerIndex-1
+                # are fallbacks for older exports. Same order as schnet.py.
+                for cand in (oidx+1, oidx, oidx-1):
                     if cand in comp_by_idx:
                         comp_by_idx[cand]['designator'] = d.get('TEXT', comp_by_idx[cand]['designator'])
                         break
