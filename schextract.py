@@ -51,11 +51,14 @@ def parse_fields(s):
             d[k.upper()] = v  # upper-fold keys
     return d
 
-def main(path):
-    recs = read_records(path)
-    parsed = [parse_fields(r) for r in recs]
-    # Build component index -> designator/comment
-    # records of RECORD=1 are components; their designator is a child RECORD=34 with OwnerIndex
+def resolve_designators(parsed):
+    """Map component ordinal -> {libref, comment, designator, idx}.
+
+    records of RECORD=1 are components; their designator is a child RECORD=34
+    with OwnerIndex. owner ordinal: OwnerIndex+1 is the documented convention
+    (records list, header is index 0); OwnerIndex/OwnerIndex-1 are fallbacks
+    for older exports. Same order as schnet.py.
+    """
     comp_by_idx = {}  # ordinal index -> dict
     for idx, d in enumerate(parsed):
         if d.get('RECORD') == '1':
@@ -74,13 +77,16 @@ def main(path):
                     oidx = int(oi)
                 except:
                     continue
-                # owner ordinal: OwnerIndex+1 is the documented convention
-                # (records list, header is index 0); OwnerIndex/OwnerIndex-1
-                # are fallbacks for older exports. Same order as schnet.py.
                 for cand in (oidx+1, oidx, oidx-1):
                     if cand in comp_by_idx:
                         comp_by_idx[cand]['designator'] = d.get('TEXT', comp_by_idx[cand]['designator'])
                         break
+    return comp_by_idx
+
+def main(path):
+    recs = read_records(path)
+    parsed = [parse_fields(r) for r in recs]
+    comp_by_idx = resolve_designators(parsed)
     # also capture COMMENT from record 41 Parameter with NAME=Comment? Often comment on rec 1.
     print(f"### FILE: {path}")
     print(f"# total records: {len(recs)}")
