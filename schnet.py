@@ -8,6 +8,7 @@ name(s) and designator-level pin members.
 Usage: python3 schnet.py <path/to/sheet.SchDoc> [filter]
 """
 import sys
+from collections import defaultdict
 import schextract as se
 
 DIRS = [(1,0),(0,1),(-1,0),(0,-1)]  # PinConglomerate & 3
@@ -91,7 +92,6 @@ def build(path):
             nid=('port',i); nodes.append((nid,x,y)); labelnode[nid]=('PORT',d.get('NAME',''))
     # wires (27): segments; each vertex is a node; consecutive vertices connected
     wsegs=[]  # (x1,y1,x2,y2)
-    wirevtx=[] # nodes for wire vertices
     for i,d in enumerate(P):
         if d.get('RECORD')=='27':
             lc=to_i(d.get('LOCATIONCOUNT'))
@@ -105,7 +105,6 @@ def build(path):
     # Union-find over node ids + wire-segment ids
     uf=UF()
     # index nodes by coordinate for quick equal-point merge
-    from collections import defaultdict
     bycoord=defaultdict(list)
     for nid,x,y in nodes:
         bycoord[(x,y)].append(nid)
@@ -131,7 +130,6 @@ def build(path):
             if on_segment(x,y,x1,y1,x2,y2):
                 uf.union(nid,('seg',wi,k))
     # Build nets
-    from collections import defaultdict
     netmembers=defaultdict(list)
     netnames=defaultdict(set)
     for nid,x,y in nodes:
@@ -143,7 +141,7 @@ def build(path):
     return comp, netmembers, netnames, pinnode
 
 def main(path, filt=None):
-    comp,netmembers,netnames,pinnode=build(path)
+    _comp,netmembers,netnames,_pinnode=build(path)
     print(f"### NETLIST: {path}")
     nets=[]
     for r,members in netmembers.items():
@@ -153,9 +151,9 @@ def main(path, filt=None):
         nets.append((netlabel, members, names))
     nets.sort(key=lambda t:t[0])
     for netlabel,members,names in nets:
-        if filt and filt.lower() not in (netlabel+' '+' '.join(f"{d}.{p}" for d,p,n,l in members)).lower():
+        if filt and filt.lower() not in (netlabel+' '+' '.join(f"{d}.{p}" for d,p,_n,_l in members)).lower():
             continue
-        mlist=', '.join(f"{d}.{num}({p})" for d,p,num,l in sorted(members))
+        mlist=', '.join(f"{d}.{num}({p})" for d,p,num,_l in sorted(members))
         print(f"\nNET [{netlabel}] :: {mlist}")
 
 if __name__=='__main__':
