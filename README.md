@@ -1,5 +1,7 @@
 # altium-schdoc-tools
 
+[![Tests](https://github.com/pasrom/altium-schdoc-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/pasrom/altium-schdoc-tools/actions/workflows/tests.yml)
+
 Parse Altium `.SchDoc` schematics into **named netlists** — no Altium licence,
 any platform, pure Python on top of [`olefile`](https://pypi.org/project/olefile/).
 
@@ -93,6 +95,24 @@ parse path/to/Sheet.SchDoc -f net-list -o nets.json   # slow: minutes per sheet
 - **Off-grid placements** carry `_Frac` sub-unit coordinate fields that
   whole-unit parsing ignores; see the
   [format notes](docs/altium-schdoc-format.md).
+
+## Testing
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+python3 -m pytest tests/ -v
+```
+
+Regression tests run both tools against fixtures under `tests/fixtures/` —
+public `.SchDoc` files from
+[pasrom/Altium-Schematic-Parser](https://github.com/pasrom/Altium-Schematic-Parser)'s
+own test suite (MIT-licensed), plus a minimal synthetic case for the
+OwnerIndex probe-order logic that none of those fixtures happen to exercise.
+The pinned numbers are today's *actual* output, not hand-verified ground
+truth — the point is catching a silent regression, which is exactly how the
+OwnerIndex fix (see the commit history) got caught in the first place: by
+testing against a real schematic, not a synthetic one. CI (GitHub Actions)
+runs this on every push against Python 3.9 and 3.12.
 
 ## Claude Code skill
 
